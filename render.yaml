@@ -8,7 +8,7 @@ services:
   - type: web
     name: atlas-backend
     runtime: docker
-    dockerfilePath: ./Dockerfile
+    dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
     healthCheckPath: /healthz
     envVars:
