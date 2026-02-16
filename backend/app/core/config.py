@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings
+from pydantic import model_validator
 from functools import lru_cache
 
 
@@ -9,6 +10,18 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql+asyncpg://atlas:atlas@localhost:5432/atlas_crm"
     DATABASE_URL_SYNC: str = "postgresql://atlas:atlas@localhost:5432/atlas_crm"
     REDIS_URL: str = "redis://localhost:6379/0"
+
+    @model_validator(mode="after")
+    def fix_database_urls(self) -> "Settings":
+        # Render gives postgres:// but asyncpg needs postgresql+asyncpg://
+        if self.DATABASE_URL.startswith("postgres://"):
+            self.DATABASE_URL = self.DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
+        elif self.DATABASE_URL.startswith("postgresql://") and "asyncpg" not in self.DATABASE_URL:
+            self.DATABASE_URL = self.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+        # Sync URL
+        if not self.DATABASE_URL_SYNC or self.DATABASE_URL_SYNC == "postgresql://atlas:atlas@localhost:5432/atlas_crm":
+            self.DATABASE_URL_SYNC = self.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://", 1)
+        return self
 
     JWT_SECRET: str = "change-me-in-production-super-secret-key"
     JWT_ALGORITHM: str = "HS256"

@@ -1,4 +1,5 @@
-const API_BASE = '/api/v1';
+const BACKEND = import.meta.env.VITE_BACKEND_URL || '';
+const API_BASE = `${BACKEND}/api/v1`;
 
 class ApiClient {
   private getToken(): string | null {

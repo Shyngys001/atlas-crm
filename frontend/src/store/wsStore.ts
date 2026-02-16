@@ -20,9 +20,17 @@ export const useWSStore = create<WSState>((set, get) => ({
     const existing = get().socket;
     if (existing && existing.readyState === WebSocket.OPEN) return;
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.host;
-    const ws = new WebSocket(`${protocol}//${host}/ws?token=${token}`);
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || '';
+    let wsUrl: string;
+    if (backendUrl) {
+      const url = new URL(backendUrl);
+      const wsProtocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+      wsUrl = `${wsProtocol}//${url.host}/ws?token=${token}`;
+    } else {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      wsUrl = `${protocol}//${window.location.host}/ws?token=${token}`;
+    }
+    const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => set({ connected: true });
     ws.onclose = () => {
